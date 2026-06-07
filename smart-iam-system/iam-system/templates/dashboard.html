@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secured Workspace Dashboard - Smart IAM</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom Cyber CSS -->
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Cyber Shield Navigation Bar -->
+    <nav class="navbar navbar-expand-lg border-bottom border-secondary" style="background-color: var(--bg-secondary); padding: 12px 20px;">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white fw-bold d-flex align-items-center" href="#">
+                <i class="fa-solid fa-shield-halved me-2" style="color: var(--accent-cyan);"></i> SMART IAM SYSTEM
+            </a>
+            
+            <button class="navbar-toggler btn-close-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarText">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link text-white-50 active" aria-current="page" href="{{ url_for('dashboard') }}">
+                            <i class="fa-solid fa-gauge-high me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    {% if role == 'Admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link text-white fw-semibold" href="{{ url_for('admin') }}" style="color: var(--accent-rose) !important;">
+                            <i class="fa-solid fa-lock-open me-1"></i> ADMIN OPERATIONS
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <div class="d-flex align-items-center text-white-50 bg-dark py-1 px-3 rounded border border-secondary">
+                    <span class="me-3 small">
+                        Operator: <strong class="text-white">{{ username }}</strong> 
+                        <span class="badge rounded-pill {% if role == 'Admin' %}badge-admin{% elif role == 'Manager' %}badge-manager{% else %}badge-employee{% endif %} ms-1">
+                            {{ role }}
+                        </span>
+                    </span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger border-0 d-flex align-items-center">
+                        <i class="fa-solid fa-power-off me-1"></i> Sign-Out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Workspace Content -->
+    <div class="container my-5">
+        
+        <!-- Welcome banner -->
+        <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
+            <div>
+                <h1 class="font-sans font-medium text-white tracking-tight fw-bold mb-1">ACCESS SECURITY DASHBOARD</h1>
+                <p class="text-muted m-0">Governing Role-Based Access Controls & Threat Vector Logs</p>
+            </div>
+            
+            <div class="text-end">
+                <span class="text-muted small">SECURE LOCALTIME (UTC)</span><br>
+                <code class="text-info fw-semibold" style="font-size: 1.1rem;"><span id="time_ticker">UTC SECURE ZONE</span></code>
+            </div>
+        </div>
+
+        <!-- Alert Banner (Flash messages) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show mb-4" role="alert" style="background-color: var(--bg-card); border-left: 4px solid {% if category == 'success' %}var(--accent-emerald){% else %}var(--accent-rose){% endif %}; color: #fff;">
+                <i class="fa-solid {% if category == 'success' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %} me-2" style="color: {% if category == 'success' %}var(--accent-emerald){% else %}var(--accent-rose){% endif %};"></i>
+                {{ message }}
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- Three Dashboard Stats Row -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="card cyber-card stat-card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted uppercase small tracking-wider">Total Handled Tickets</span>
+                            <h2 class="display-6 fw-bold mt-2 mb-0 text-white">{{ total_requests }}</h2>
+                        </div>
+                        <i class="fa-solid fa-folder-tree fa-2x text-muted opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card cyber-card stat-card pending p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted uppercase small tracking-wider">Pending Approvals</span>
+                            <h2 class="display-6 fw-bold mt-2 mb-0" style="color: #f59e0b;">{{ pending_requests }}</h2>
+                        </div>
+                        <i class="fa-solid fa-hourglass-half fa-2x opacity-50" style="color: #f59e0b;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card cyber-card stat-card approved p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted uppercase small tracking-wider">Authorized Granted Scopes</span>
+                            <h2 class="display-6 fw-bold mt-2 mb-0 text-white" style="color: var(--accent-emerald) !important;">{{ approved_requests }}</h2>
+                        </div>
+                        <i class="fa-solid fa-circle-check fa-2x opacity-50" style="color: var(--accent-emerald);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-5">
+            
+            <!-- Left Column: Tasks Modules -->
+            <div class="col-lg-7">
+                
+                <!-- Employee Mode: Request Access -->
+                {% if role == 'Employee' %}
+                <div class="card cyber-card mb-5">
+                    <div class="cyber-header">
+                        <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-paper-plane me-2"></i>REQUEST WORKSPACE ACCESS SCOPE</h5>
+                    </div>
+                    <div class="p-4">
+                        <form action="{{ url_for('submit_request') }}" method="POST">
+                            <div class="mb-3">
+                                <label for="resource_name" class="form-label input-label">TARGET METROPOLITAN ASSET / RESOURCE NAME</label>
+                                <input type="text" class="form-control cyber-input" id="resource_name" name="resource_name" placeholder="E.g., Customer Database S3, Financial Audit Sheet" required>
+                                <div class="form-text text-muted small mt-2">
+                                    Enforce security clearance: access logs will register this submission trace immediately inside sovereign logs file.
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-cyber-primary w-100">
+                                SUBMIT AUTHORIZATION FORM
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Employee Mode: My Requests History -->
+                <div class="card cyber-card">
+                    <div class="cyber-header d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-list-check me-2"></i>MY RECENT AUTHORIZATION TICKETS</h5>
+                        <span class="badge rounded bg-dark border border-secondary">{{ my_requests|length }} Tickets</span>
+                    </div>
+                    <div class="p-0">
+                        <div class="table-responsive">
+                            <table class="table cyber-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>REQUEST ID</th>
+                                        <th>RESOURCE TARGET</th>
+                                        <th>REQUEST TIMELOG</th>
+                                        <th>STATUS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if my_requests %}
+                                        {% for req in my_requests %}
+                                        <tr>
+                                            <td><code>#REQ-{{ req.id }}</code></td>
+                                            <td><strong>{{ req.resource_name }}</strong></td>
+                                            <td><span class="small text-muted">{{ req.request_date }}</span></td>
+                                            <td>
+                                                {% if req.status == 'Pending' %}
+                                                    <span class="badge text-bg-warning text-dark"><i class="fa-solid fa-hourglass-half me-1"></i>Pending</span>
+                                                {% elif req.status == 'Approved' %}
+                                                    <span class="badge text-bg-success"><i class="fa-solid fa-square-check me-1"></i>Approved</span>
+                                                {% else %}
+                                                    <span class="badge text-bg-danger"><i class="fa-solid fa-rectangle-xmark me-1"></i>Rejected</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">No requests found. Use the submission card above to start.</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Manager & Admin Mode: Approve/Reject Access Requests -->
+                {% if role in ['Manager', 'Admin'] %}
+                <div class="card cyber-card">
+                    <div class="cyber-header d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-gavel me-2"></i>PENDING ACCESS APPROVAL WORKLIST</h5>
+                        <span class="badge rounded bg-warning text-dark">ACTION REQUESTED</span>
+                    </div>
+                    <div class="p-0">
+                        <div class="table-responsive">
+                            <table class="table cyber-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>USERID</th>
+                                        <th>RESOURCE CLEARANCE TARGET</th>
+                                        <th>DATE FILED</th>
+                                        <th>GOVERNANCE ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if manager_pending %}
+                                        {% for req in manager_pending %}
+                                        <tr>
+                                            <td><strong class="text-info">{{ req.username }}</strong></td>
+                                            <td><code>{{ req.resource_name }}</code></td>
+                                            <td><span class="small text-muted">{{ req.request_date }}</span></td>
+                                            <td>
+                                                <div class="d-flex gap-2">
+                                                    <form action="{{ url_for('approve_request', request_id=req.id) }}" method="POST">
+                                                        <button type="submit" class="btn btn-sm btn-cyber-success py-1 px-3 d-flex align-items-center">
+                                                            <i class="fa-solid fa-check me-1"></i> Grant
+                                                        </button>
+                                                    </form>
+                                                    <form action="{{ url_for('reject_request', request_id=req.id) }}" method="POST">
+                                                        <button type="submit" class="btn btn-sm btn-cyber-danger py-1 px-3 d-flex align-items-center">
+                                                            <i class="fa-solid fa-xmark me-1"></i> Deny
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">
+                                                <i class="fa-solid fa-circle-check text-success fa-2x mb-2 d-block"></i>
+                                                Secure State: No pending access requests.
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+            <!-- Right Column: Audit Logs Terminal View -->
+            <div class="col-lg-5">
+                <div class="card cyber-card">
+                    <div class="cyber-header d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-terminal me-2"></i>CYBER THREAT AUDIT DETECTORS</h5>
+                        <span class="badge text-bg-dark rounded border border-secondary text-info"><i class="fa-solid fa-circle-dot text-danger pulse me-1"></i> LIVE-FEED</span>
+                    </div>
+                    <div class="p-4 bg-dark rounded-bottom">
+                        <p class="text-muted small mb-3">Sovereign traces generated sequentially in the SQLite audit file logs table database.</p>
+                        
+                        <div class="log-terminal">
+                            {% if audit_logs %}
+                                {% for log in audit_logs %}
+                                <div class="terminal-line">
+                                    <span class="terminal-time">[{{ log.timestamp }}]</span>
+                                    <span class="terminal-user">@{{ log.username }}</span>:
+                                    <span class="terminal-action">{{ log.action }}</span>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-muted small">No audit logs indexed yet.</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mt-3 text-end">
+                            <span class="text-muted small">Automatic SQLite Write Sync: <strong>Enabled</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Footer Security Banner -->
+    <footer class="border-top border-secondary text-center py-4 mt-5 bg-dark">
+        <p class="text-white-50 m-0 small">Smart IAM System Model - Security Laboratory College Project.</p>
+        <p class="text-muted small mt-1 mb-0">Prepared With SQLite Standard DB & Python Flask Core Frameworks</p>
+    </footer>
+
+    <!-- Bootstrap Bundle with Popper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Local clock ticker for realism
+        function clockTicker() {
+            const now = new Date();
+            document.getElementById('time_ticker').innerText = now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+        }
+        setInterval(clockTicker, 1000);
+        clockTicker();
+    </script>
+</body>
+</html>

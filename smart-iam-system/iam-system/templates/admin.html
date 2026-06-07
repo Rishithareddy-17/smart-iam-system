@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sovereign Admin Console - Smart IAM</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom Cyber CSS -->
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Upper Secure Header Nav -->
+    <nav class="navbar navbar-expand-lg border-bottom border-secondary" style="background-color: var(--bg-secondary); padding: 12px 20px;">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white fw-bold d-flex align-items-center" href="{{ url_for('dashboard') }}">
+                <i class="fa-solid fa-shield-halved me-2" style="color: var(--accent-rose);"></i> SMART IAM SYSTEM
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin" aria-controls="navbarAdmin" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarAdmin">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link text-white-50" href="{{ url_for('dashboard') }}"><i class="fa-solid fa-gauge-high me-1"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white active fw-semibold" href="{{ url_for('admin') }}" style="color: var(--accent-rose) !important;"><i class="fa-solid fa-lock-open me-1"></i> ADMIN OPERATIONS</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center text-white-50 bg-dark py-1 px-3 rounded border border-secondary">
+                    <span class="me-3 small">
+                        Administrator Operator: <strong class="text-white">{{ session['username'] }}</strong> 
+                        <span class="badge rounded-pill badge-admin ms-1">SUPER_ADMIN</span>
+                    </span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger border-0 d-flex align-items-center">
+                        <i class="fa-solid fa-power-off me-1"></i> Sign-Out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Admin Master Controller Grid -->
+    <div class="container my-5">
+        
+        <!-- Welcome banner -->
+        <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-2">
+            <div>
+                <h1 class="text-white fw-bold m-0"><i class="fa-solid fa-user-shield me-2 text-rose" style="color: var(--accent-rose);"></i> SOVEREIGN SECURITY DIRECTORY</h1>
+                <p class="text-muted m-0">Root Override Console — User Identities, Security Gate Strikes, & Governance Controls</p>
+            </div>
+            <div>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm text-white px-3"><i class="fa-solid fa-arrow-left me-1"></i> Return Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Alert messages mapper -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show mb-4" role="alert" style="background-color: var(--bg-card); border-left: 4px solid {% if category == 'success' %}var(--accent-emerald){% else %}var(--accent-rose){% endif %}; color: #fff;">
+                {{ message }}
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="row g-4">
+            
+            <!-- User Permissions Governance Directory Section -->
+            <div class="col-lg-12">
+                <div class="card cyber-card mb-5">
+                    <div class="cyber-header d-flex justify-content-between align-items-center" style="border-bottom-color: var(--accent-rose);">
+                        <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-users me-2"></i>GOVERN SYSTEM PRIVILEGES & LOCKOUT OVERRIDES</h5>
+                        <span class="badge rounded bg-danger">{{ users|length }} Total Registered Identities</span>
+                    </div>
+                    <div class="p-0">
+                        <div class="table-responsive">
+                            <table class="table cyber-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>OPERATOR NAME</th>
+                                        <th>SECURE COMMUNICATIONS</th>
+                                        <th>CURRENT PRIVILEGE LEVEL</th>
+                                        <th>SECURITY STRIKES</th>
+                                        <th>SECURITY STATUS</th>
+                                        <th>OVERRIDE ROLE (RBAC)</th>
+                                        <th>ACCIDENT FIREWALL DISMISS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for usr in users %}
+                                    <tr>
+                                        <td><strong class="text-white">{{ usr.username }}</strong></td>
+                                        <td><code>{{ usr.email }}</code></td>
+                                        <td>
+                                            <span class="badge rounded-pill {% if usr.role == 'Admin' %}badge-admin{% elif usr.role == 'Manager' %}badge-manager{% else %}badge-employee{% endif %}">
+                                                {{ usr.role }}
+                                            </span>
+                                        </td>
+                                        <td><span class="fw-mono">{{ usr.failed_attempts }}/3 Strikes</span></td>
+                                        <td>
+                                            {% if usr.locked == 1 %}
+                                                <span class="badge text-bg-danger px-2.5 py-1.5"><i class="fa-solid fa-user-lock me-1"></i> LOCKED</span>
+                                            {% else %}
+                                                <span class="badge text-bg-success px-2.5 py-1.5"><i class="fa-solid fa-circle-check me-1"></i> SECURE ACTIVE</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <!-- Change Role Action Form -->
+                                            {% if usr.username != 'admin' %}
+                                            <form action="{{ url_for('change_role') }}" method="POST" class="d-flex align-items-center gap-2">
+                                                <input type="hidden" name="user_id" value="{{ usr.id }}">
+                                                <select name="role" class="form-select form-select-sm p-1.5 cyber-input text-white bg-dark border-secondary" style="font-size: 0.8rem; width: 120px;" required>
+                                                    <option value="" disabled selected>Alter Role...</option>
+                                                    <option value="Employee">Employee</option>
+                                                    <option value="Manager">Manager</option>
+                                                    <option value="Admin">Admin</option>
+                                                </select>
+                                                <button type="submit" class="btn btn-sm btn-cyber-primary py-1 px-2.5" style="font-size: 0.77rem;" title="Commit Role Change">
+                                                    Apply
+                                                </button>
+                                            </form>
+                                            {% else %}
+                                            <span class="text-muted small">System Sovereign Sovereign (Immutable)</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <!-- Unlock locked user trigger -->
+                                            {% if usr.locked == 1 %}
+                                            <form action="{{ url_for('unlock_user_post', user_id=usr.id) }}" method="POST">
+                                                <button type="submit" class="btn btn-sm btn-cyber-success py-1 px-3 d-flex align-items-center text-xs" style="font-size: 0.76rem;">
+                                                    <i class="fa-solid fa-unlock-keyhole me-1"></i> Unlock Account
+                                                </button>
+                                            </form>
+                                            {% else %}
+                                            <span class="text-muted small">Clear</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Access Tickets Auditing Section -->
+            <div class="col-lg-6">
+                <div class="card cyber-card h-100">
+                    <div class="cyber-header">
+                        <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-folder-closed me-2"></i>ALL HISTORIC ACCESS REQUEST TICKETS</h5>
+                    </div>
+                    <div class="p-0">
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table cyber-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>TICKET</th>
+                                        <th>OPERATOR ID</th>
+                                        <th>RESOURCE</th>
+                                        <th>STATUS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if all_requests %}
+                                        {% for req in all_requests %}
+                                        <tr>
+                                            <td><code>#{{ req.id }}</code></td>
+                                            <td><strong>{{ req.username }}</strong></td>
+                                            <td><span class="small">{{ req.resource_name }}</span></td>
+                                            <td>
+                                                {% if req.status == 'Pending' %}
+                                                    <span class="badge text-bg-warning text-dark">Pending</span>
+                                                {% elif req.status == 'Approved' %}
+                                                    <span class="badge text-bg-success">Approved</span>
+                                                {% else %}
+                                                    <span class="badge text-bg-danger">Rejected</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">No requests log registered yet.</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Complete System Trace Log monitor -->
+            <div class="col-lg-6">
+                <div class="card cyber-card h-100">
+                    <div class="cyber-header">
+                        <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-list-ul me-2"></i>FULL DETECTORS TRANSACTION AUDIT LOGS</h5>
+                    </div>
+                    <div class="p-4" style="background-color: var(--bg-secondary);">
+                        <p class="text-muted small mb-3">Direct trace view of the SQLite <code>AuditLogs</code> table records schema.</p>
+                        <div class="log-terminal" style="max-height: 380px;">
+                            {% if audit_logs %}
+                                {% for log in audit_logs %}
+                                <div class="terminal-line">
+                                    <span class="terminal-time">[{{ log.timestamp }}]</span>
+                                    <span class="terminal-user">@{{ log.username }}</span>:
+                                    <span class="terminal-action">{{ log.action }}</span>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-muted small">Terminal trace stream empty.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Foot details -->
+    <footer class="border-top border-secondary text-center py-4 mt-5 bg-dark">
+        <p class="text-white-50 m-0 small">Smart IAM System Model - Administrator Sovereign Control Board.</p>
+        <p class="text-muted small mt-1 mb-0">SQLite Connection Active — Full Security Logs Integration Active.</p>
+    </footer>
+
+    <!-- Bootstrap Bundle with Popper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

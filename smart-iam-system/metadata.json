@@ -1,0 +1,6 @@
+{
+  "name": "Smart IAM System",
+  "description": "Smart Identity & Access Management System featuring RBAC, Account Lockout policies, Access Request approvals, and full Security Audit logging.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
